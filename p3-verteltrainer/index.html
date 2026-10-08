@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Verteltrainer – prototype 3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{--d:#0F2419;--d2:#173326;--d3:#21412F;--g:#2E8B5C;--g-l:#E6F2EA;--y:#FFD43B;--y-d:#8A6A00;--y-l:#FFF6CC;--red:#E8664A;--ink:#17261E;--mute:#8FA597;--line:#2A4A38;--paper:#F8F6EE}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--d);color:#EAF2EC;min-height:100vh;display:flex;flex-direction:column}
+  button,textarea{font:inherit;color:inherit}
+  [hidden]{display:none !important}
+  .bar{display:flex;align-items:center;gap:10px;padding:16px 24px}
+  .logo{width:24px;height:24px;border-radius:7px;background:var(--y);position:relative}
+  .logo::after{content:"";position:absolute;left:6px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--d)}
+  .bar b{font-size:16px}
+  .tag{font-size:11px;border:1px solid rgba(255,212,59,.5);color:var(--y);border-radius:99px;padding:2px 9px}
+  main{flex:1;width:100%;max-width:880px;margin:0 auto;padding:0 16px 24px;display:flex;flex-direction:column}
+
+  /* kies */
+  .pick{text-align:center;padding:5vh 0 0}
+  .pick h1{font-size:clamp(28px,5vw,44px);margin:0 0 6px;letter-spacing:-.02em}
+  .pick h1 span{color:var(--y)}
+  .pick p{color:var(--mute);margin:0 0 30px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .pc{background:var(--d2);border:1px solid var(--line);border-radius:18px;padding:22px 18px;cursor:pointer;text-align:center;transition:transform .15s,border-color .15s}
+  .pc:hover{transform:translateY(-3px);border-color:var(--y)}
+  .av{width:62px;height:62px;border-radius:50%;background:var(--y);color:var(--d);font-weight:800;font-size:24px;display:grid;place-items:center;margin:0 auto 12px}
+  .pc b{display:block;font-size:18px}
+  .pc .r{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--y);font-weight:700;margin:2px 0 10px}
+  .pc .w{font-size:13px;color:var(--mute)}
+  .meta{margin-top:22px;font-size:12.5px;color:var(--mute)}
+
+  /* gesprek */
+  .top{display:flex;align-items:center;gap:12px;padding:6px 0 14px;border-bottom:1px solid var(--line)}
+  .top .av{width:44px;height:44px;font-size:18px;margin:0}
+  .top b{display:block}
+  .top small{color:var(--mute);font-size:12.5px}
+  .meter{margin-left:auto;width:min(260px,40vw)}
+  .meter .l{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+  .meter .l b{color:var(--y);display:inline;letter-spacing:0;font-size:13px}
+  .track{height:10px;border-radius:99px;background:var(--d3);overflow:hidden}
+  .fill{height:100%;background:linear-gradient(90deg,var(--g),var(--y));border-radius:99px;transition:width .6s cubic-bezier(.3,1.3,.5,1)}
+  .bump{font-size:12px;font-weight:700;margin-left:6px}
+  .dots{display:flex;gap:6px;justify-content:center;margin:12px 0 4px}
+  .dots i{width:26px;height:4px;border-radius:2px;background:var(--d3)}
+  .dots i.on{background:var(--y)}.dots i.done{background:var(--g)}
+
+  .chat{flex:1;display:flex;flex-direction:column;gap:10px;padding:14px 0;overflow-y:auto;min-height:300px}
+  .msg{max-width:78%;padding:11px 15px;border-radius:18px;font-size:15.5px;line-height:1.45;animation:in .25s ease-out}
+  .msg.p{background:var(--d2);border:1px solid var(--line);border-bottom-left-radius:6px;align-self:flex-start}
+  .msg.u{background:var(--y);color:var(--d);border-bottom-right-radius:6px;align-self:flex-end}
+  .msg.p .x{display:block;font-size:11px;color:var(--y);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+  .msg.sys{align-self:center;background:none;color:var(--mute);font-size:12.5px;padding:2px}
+  .typing{align-self:flex-start;background:var(--d2);border:1px solid var(--line);border-radius:18px;padding:12px 16px;display:flex;gap:4px}
+  .typing span{width:7px;height:7px;border-radius:50%;background:var(--mute);animation:b 1s infinite}
+  .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+  @keyframes b{0%,60%,100%{opacity:.3}30%{opacity:1}}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}}
+
+  .input{display:flex;gap:8px;align-items:flex-end;background:var(--d2);border:1px solid var(--line);border-radius:18px;padding:8px}
+  .input textarea{flex:1;background:none;border:0;outline:0;resize:none;min-height:46px;max-height:160px;padding:8px 10px;font-size:15px;color:#fff}
+  .input textarea::placeholder{color:var(--mute)}
+  .send{border:0;background:var(--y);color:var(--d);font-weight:800;border-radius:12px;padding:12px 18px;cursor:pointer}
+  .send:disabled{opacity:.4;cursor:default}
+  .aux{display:flex;gap:14px;justify-content:space-between;font-size:12.5px;margin-top:8px;color:var(--mute)}
+  .aux button{border:0;background:none;color:var(--mute);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+  .aux button:hover{color:var(--y)}
+
+  /* feedback */
+  .fb{padding:10px 0 0}
+  .verdict{text-align:center;padding:16px 0 22px}
+  .verdict .big{font-size:clamp(26px,4.5vw,38px);font-weight:800;letter-spacing:-.02em;margin:8px 0 4px}
+  .verdict .big span{color:var(--y)}
+  .verdict p{color:var(--mute);margin:0}
+  .ring{width:110px;height:110px;margin:0 auto;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:30px;color:var(--y)}
+  .paper{background:var(--paper);color:var(--ink);border-radius:18px;padding:24px}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .col h3{margin:0 0 10px;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+  .col h3::before{content:"";width:12px;height:12px;border-radius:50%}
+  .col.ok h3{color:#1E6B47}.col.ok h3::before{background:#2E8B5C}
+  .col.miss h3{color:var(--y-d)}.col.miss h3::before{background:var(--y)}
+  .col.bad h3{color:#B5452C}.col.bad h3::before{background:var(--red)}
+  .it{font-size:14px;line-height:1.45;padding:7px 0;border-top:1px solid #E7E3D4}
+  .it:first-of-type{border-top:0}
+  .it b{display:block}
+  .it small{display:block;font-size:11.5px;color:#6E776F;margin-top:2px}
+  .it q{font-style:italic}
+  .none{font-size:14px;color:#6E776F}
+  .learn{margin-top:22px;background:#123A28;color:#fff;border-radius:14px;padding:18px 20px}
+  .learn h3{margin:0 0 10px;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--y)}
+  .learn ol{margin:0;padding-left:20px}
+  .learn li{margin-bottom:8px;font-size:15px;line-height:1.45}
+  .learn small{display:block;font-size:11.5px;opacity:.65}
+  .again{display:flex;gap:10px;justify-content:center;margin:22px 0 6px;flex-wrap:wrap}
+  .btn{border:0;border-radius:99px;padding:11px 20px;font-weight:700;cursor:pointer;background:var(--y);color:var(--d)}
+  .btn.o{background:none;border:1px solid var(--line);color:#fff}
+  footer{font-size:11px;color:var(--mute);text-align:center;padding:10px 16px 20px}
+  @media(max-width:720px){.cards,.cols{grid-template-columns:1fr}.msg{max-width:90%}.top{flex-wrap:wrap}.meter{width:100%;margin-left:0}}
+</style>
+</head>
+<body>
+<header class="bar"><div class="logo"></div><b>Verteltrainer</b><span class="tag">Prototype 3</span></header>
+
+<main>
+  <section id="sPick" class="pick">
+    <h1>Wie overtuig jij <span>vandaag?</span></h1>
+    <p>Vier lastige vragen. Daarna hoor je wat je vergat.</p>
+    <div class="cards" id="cards"></div>
+    <div class="meta">± 5 minuten · geen spiekbriefje</div>
+  </section>
+
+  <section id="sTalk" hidden style="display:flex;flex-direction:column;flex:1">
+    <div class="top">
+      <div class="av" id="tAv"></div>
+      <div><b id="tName"></b><small id="tRole"></small></div>
+      <div class="meter"><div class="l"><span>Overtuigd</span><span><b id="mVal">30</b><span class="bump" id="mBump"></span></span></div><div class="track"><div class="fill" id="mFill" style="width:30%"></div></div></div>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="chat" id="chat"></div>
+    <div>
+      <div class="input"><textarea id="ans" placeholder="Jouw antwoord…" rows="2"></textarea><button class="send" id="send">Antwoord</button></div>
+      <div class="aux"><button id="hint">Tip: waar let deze persoon op? (−5)</button><button id="demo">Demo: vul voorbeeldantwoord in</button></div>
+    </div>
+  </section>
+
+  <section id="sFb" class="fb" hidden></section>
+</main>
+<footer>Prototype · Campus Intelligence Challenge (HHS) · AI gesimuleerd met regels · personen fictief · feiten uit openbare bronnen, nog niet bevestigd</footer>
+
+<script>
+/* ---------- argumenten (feiten + bron) ---------- */
+const HONEST=["weet ik niet","weten we nog niet","weten we niet","nog niet gemeten","niet gemeten","geen cijfers","geen data","zoek ik uit","zoek ik voor je uit","zoeken we uit","kom ik op terug","eerlijk gezegd","nog niet bekend","vraag ik na","nog niet goed laten zien","weet ik nog niet"];
+const ARG={
+  talent:{l:"Talent",say:"± 800 hbo- en mbo-IT-studenten op het park",src:"gemeente Zoetermeer · MRDH",kw:["student","talent","stagi","hogeschool","hhs","mbo","hbo","personeel","afstude","opleiding"]},
+  buren:{l:"Buren en netwerk",say:"75+ bedrijven en instellingen, o.a. Siemens Mobility, WS Audiology, TNO",src:"dutchinnovationpark.nl · gemeente Zoetermeer",kw:["bedrijven","buren","huurders","netwerk","community","siemens","audiology","tno","samenwerk","partners"]},
+  bereik:{l:"Bereikbaarheid",say:"Aan de A12, met station Lansingerland-Zoetermeer en een P+R met 700 gratis plekken naast het park",src:"dutchinnovationpark.nl",kw:["a12","station","bereikba","parkeer","trein","snelweg","rotterdam","den haag","ligging"]},
+  beleid:{l:"Beleid van de stad",say:"Omgevingsvisie 2040: het park is \"de zichtbare aanjager\" van Zoetermeer als stad van toegepaste innovatie",src:"Omgevingsvisie Zoetermeer 2040, p. 26",kw:["omgevingsvisie","aanjager","beleid","strategisch","prioriteit","visie"]},
+  helix:{l:"Triple Helix",say:"Triple Helix Zoetermeer 2040 startte op 22-09-2026 in de DIF: gemeente, onderwijs en bedrijven samen",src:"gemeente Zoetermeer, 24-09-2026",kw:["triple helix","helix","kwartiermaker"]},
+  geld:{l:"Hefboom van het geld",say:"€ 60 mln privaat in vastgoed (2019–2025) tegenover € 1,4 mln van de gemeente (2022–2023)",src:"MRDH-campusprofiel",kw:["miljoen","mln","investering","geïnvesteerd","geinvesteerd","vastgoed","privaat"]},
+  banen:{l:"Werkgelegenheid",say:"± 2.200 mensen werken op het park",src:"dutchinnovationpark.nl (mei 2026)",kw:["banen","werkgelegenheid","werkenden","arbeidsplaats","mensen werken","jobs","werkplekken"]},
+  labs:{l:"Gedeelde labs",say:"Big Data Innovatiehub, Cyber Security centrum en GameLab, te gebruiken met studenten",src:"MRDH-campusprofiel",kw:["lab","hub","cyber","big data","gamelab","faciliteit"]},
+  verhuur:{l:"Huur via de verhuurder",say:"Huur en m² bespreek je met de verhuurder. Jij vertelt over de buren en het onderwijs",src:"mail Fons de Ree, 06-10-2026",kw:["verhuurder","pandeigenaar","de eigenaar","in contact"]},
+  eerlijk:{l:"Eerlijk over wat je niet weet",say:"\"Dat weten we nog niet, dat zoek ik voor je uit.\" Beter dan een verzonnen getal",src:"Mom Test · FrictieVoorspeller (Klaas Jan)",kw:HONEST}
+};
+const KNOWN=[800,700,750,75,60,2200,1659,1.4,69,50,3500,180,8,22,30];
+const HYPE=["dé hotspot","hotspot","de beste","uniek","toonaangevend","excellent","grootste","nummer 1","nummer één","wereldklasse","geweldig"];
+
+/* ---------- personen (fictief; Robert en Sanne komen uit de FrictieVoorspeller) ---------- */
+const PER={
+  robert:{naam:"Robert",rol:"Investeerder",av:"R",wil:"rendement · bezetting · toekomstwaarde",rel:["geld","buren","talent","bereik","eerlijk"],
+    pos:["Oké, dat is concreet.","Dat telt voor mijn huurders, ja.","Goed, daar kan ik mee rekenen."],
+    push:["Dat zegt elke campus. Wat heb ík eraan?","Mooi verhaal, maar waar zie ik dat terug in mijn cijfers?"],
+    hon:["Eerlijk. Liever dat dan een verzonnen getal.","Prima, dan wacht ik op je cijfers."],
+    bluff:["Waar komt dat getal vandaan?","Dat klinkt als een folder. Bron?"],
+    q:[
+      {t:"Waarom zou ik hier investeren en niet in Delft?",exp:["bereik","talent","buren"],vb:"Je zit aan de A12 en naast het station, met een P+R van 700 gratis plekken. Er lopen zo'n 800 IT-studenten rond, en je huurders zitten naast meer dan 75 bedrijven. Dat staat op de site van het park en bij de gemeente."},
+      {t:"Wat levert dat campusprogramma mijn pand concreet op?",exp:["buren","talent","eerlijk"],vb:"Huurders komen hier voor de buren en het onderwijs; daar vroeg de laatste prospect van de accountmanager ook naar. Hoeveel dat in huur scheelt, weten we nog niet. Dat zoek ik voor je uit."},
+      {t:"Hoe weet ik dat huurders hier langer blijven dan op een gewoon bedrijventerrein?",exp:["eerlijk"],vb:"Eerlijk gezegd: dat is nog niet gemeten. Als jij je huurdersverloop deelt, zoeken we het samen uit."},
+      {t:"De gemeente betaalt het programma. Wat als dat stopt?",exp:["beleid","helix","eerlijk"],vb:"Het park staat in de Omgevingsvisie 2040 als zichtbare aanjager van de stad, en sinds september loopt Triple Helix 2040. Hoe het budget na 2026 loopt, weet ik nog niet; dat vraag ik na."}
+    ]},
+  weth:{naam:"De wethouder",rol:"Bestuurder",av:"W",wil:"banen · inwoners · bewijs voor de raad",rel:["banen","beleid","geld","helix","talent","eerlijk"],
+    pos:["Dat kan ik in de raad gebruiken.","Helder.","Goed, dat is een verhaal."],
+    push:["Dat staat in elke folder. Wat is het bewijs?","Daar heeft een inwoner nog niks aan."],
+    hon:["Fijn dat je dat eerlijk zegt.","Goed. Zorg dat we het wél gaan meten."],
+    bluff:["Kan ik dat cijfer ergens nalezen?","Als de raad doorvraagt, waar staat dat?"],
+    q:[
+      {t:"Wat levert het park de stad op?",exp:["banen","talent","buren"],vb:"Zo'n 2.200 mensen werken hier, en er studeren ongeveer 800 IT-studenten. Bedrijven als Siemens Mobility en WS Audiology zitten hier. Bron: de site van het park en de gemeente."},
+      {t:"Waarom zou de gemeente hier geld in blijven steken?",exp:["geld","beleid","helix"],vb:"Tegenover € 1,4 miljoen van de gemeente staat € 60 miljoen privaat geld in vastgoed, volgens het MRDH-profiel. En het park is de zichtbare aanjager uit onze eigen Omgevingsvisie."},
+      {t:"Wat merkt een inwoner van Zoetermeer hiervan?",exp:["banen","talent","eerlijk"],vb:"Banen in de eigen stad en een IT-opleiding om de hoek, mbo en hbo. Hoeveel inwoners hier werken, weten we nog niet; dat zoek ik uit."},
+      {t:"Hoe weet ik dat het werkt?",exp:["eerlijk","banen"],vb:"Dat kunnen we nu nog niet goed laten zien: de impact is niet gemeten. Daar werken we aan. Wat we wel weten: ± 2.200 mensen werken hier."}
+    ]},
+  sanne:{naam:"Sanne",rol:"Nieuw bedrijf",av:"S",wil:"personeel · buren · bereikbaarheid",rel:["talent","buren","bereik","labs","verhuur"],
+    pos:["Interessant, dat zoek ik.","Dat scheelt me werving.","Oké, dat wil ik zien."],
+    push:["Dat heb ik in Delft ook.","Ja, maar wat heb ik daar dan aan?"],
+    hon:["Prima, dan hoor ik het later.","Fijn dat je het niet mooier maakt."],
+    bluff:["Klopt dat echt?","Waar heb je dat vandaan?"],
+    q:[
+      {t:"Waarom zou ik hier gaan zitten en niet in Delft?",exp:["talent","buren","bereik"],vb:"Je zit naast het onderwijs: zo'n 800 IT-studenten op het park. Je buren zijn bedrijven als Siemens Mobility en WS Audiology, en je zit aan de A12 bij het station."},
+      {t:"Hoe kom ik hier aan personeel?",exp:["talent","labs"],vb:"Via stagiairs en afstudeerders van de Haagse Hogeschool en mboRijnland, die hier zitten. Of een studententeam dat een semester aan jouw vraag werkt, met de labs van het park."},
+      {t:"Wie zijn mijn buren, en wat heb ik daaraan?",exp:["buren","labs"],vb:"Meer dan 75 bedrijven en instellingen, van Siemens Mobility tot TNO. Ik kan je voorstellen aan twee die bij jou passen. En je kunt de Big Data Innovatiehub gebruiken."},
+      {t:"Wat kost een plek hier?",exp:["verhuur","bereik"],vb:"Huur, m² en parkeerplekken bespreek je met de verhuurder; ik breng je in contact. Wie met de trein komt: het station ligt naast het park."}
+    ]}
+};
+
+/* ---------- state ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+let P=null,qi=0,meter=30,used=new Set(),claims=[],honestN=0,pushed=false,busy=false,hints=0;
+
+$('cards').innerHTML=Object.entries(PER).map(([k,p])=>`<div class="pc" data-k="${k}" tabindex="0" role="button"><div class="av">${p.av}</div><b>${p.naam}</b><div class="r">${p.rol}</div><div class="w">wil weten: ${p.wil}</div></div>`).join('');
+$('cards').onclick=e=>{const c=e.target.closest('.pc');if(c)start(c.dataset.k)};
+$('cards').onkeydown=e=>{if(e.key==='Enter'){const c=e.target.closest('.pc');if(c)start(c.dataset.k)}};
+
+function show(id){['sPick','sTalk','sFb'].forEach(s=>$(s).hidden=s!==id)}
+function start(k){
+  P=PER[k];qi=0;meter=30;used=new Set();claims=[];honestN=0;pushed=false;hints=0;
+  $('tAv').textContent=P.av;$('tName').textContent=P.naam;$('tRole').textContent=P.rol+' · wil weten: '+P.wil;
+  $('chat').innerHTML='';setMeter(0);dots();show('sTalk');
+  sys(`Je spreekt ${P.naam}. Antwoord zoals je het in het echt zou zeggen.`);
+  say(P.q[0].t);
+}
+function dots(){$('dots').innerHTML=P.q.map((_,i)=>`<i class="${i<qi?'done':i===qi?'on':''}"></i>`).join('')}
+function setMeter(d){
+  meter=Math.max(0,Math.min(100,meter+d));
+  $('mFill').style.width=meter+'%';$('mVal').textContent=meter;
+  const b=$('mBump');b.textContent=d?(d>0?'+':'')+d:'';b.style.color=d>0?'#7BD29E':'#E8664A';
+  clearTimeout(b._t);b._t=setTimeout(()=>b.textContent='',1400);
+}
+function add(cls,html){const m=document.createElement('div');m.className='msg '+cls;m.innerHTML=html;$('chat').appendChild(m);$('chat').scrollTop=1e6;return m}
+function sys(t){add('sys',esc(t))}
+function say(t,after){
+  busy=true;$('send').disabled=true;
+  const ty=document.createElement('div');ty.className='typing';ty.innerHTML='<span></span><span></span><span></span>';$('chat').appendChild(ty);$('chat').scrollTop=1e6;
+  setTimeout(()=>{ty.remove();add('p',`<span class="x">${esc(P.naam)}</span>${esc(t)}`);busy=false;$('send').disabled=false;$('ans').focus();after&&after()},650+Math.min(900,t.length*12));
+}
+
+/* ---------- analyse van een antwoord ---------- */
+function analyse(text){
+  const low=' '+text.toLowerCase()+' ';
+  const args=Object.keys(ARG).filter(k=>ARG[k].kw.some(w=>low.includes(w)));
+  const bad=[];
+  const nums=text.match(/(?<![A-Za-z€]\d*)\d+(?:[.,]\d+)*\s*(%|procent|miljoen|mln)?/gi)||[];
+  nums.forEach(n=>{
+    const raw=n.match(/\d+(?:[.,]\d+)*/)[0];
+    let v=raw.includes(',')?parseFloat(raw.replace(/\./g,'').replace(',','.')):parseFloat(raw.replace(/\./g,''));
+    const year=v>=1990&&v<=2100&&!/[.,]/.test(raw);
+    const big=v>=10||/%|procent|miljoen|mln/i.test(n);
+    if(big&&!year&&!KNOWN.includes(v)) bad.push(n.trim());
+  });
+  const hy=HYPE.find(h=>low.includes(h)); if(hy) bad.push(hy);
+  const words=text.trim().split(/\s+/).filter(Boolean).length;
+  return {args,bad,words,honest:args.includes('eerlijk'),quote:text.length>90?text.slice(0,88)+'…':text};
+}
+function context(text,needle){
+  const i=text.toLowerCase().indexOf(needle.toLowerCase());if(i<0)return needle;
+  const s=Math.max(0,text.lastIndexOf(' ',Math.max(0,i-25))),e=text.indexOf(' ',i+needle.length+20);
+  return (s>0?'…':'')+text.slice(s,e<0?undefined:e).trim()+(e<0?'':'…');
+}
+
+function answer(){
+  const text=$('ans').value.trim();if(!text||busy)return;
+  $('ans').value='';add('u',esc(text));
+  const q=P.q[qi],a=analyse(text);
+  a.args.forEach(x=>used.add(x));
+  if(a.bad.length) claims.push({q:a.quote,b:a.bad});
+  const rel=a.args.filter(x=>P.rel.includes(x)&&x!=='eerlijk');
+  let d,reply;
+  if(a.words<6){d=-5;reply="Kun je dat wat meer uitleggen?"}
+  else if(a.bad.length){d=-10;reply=pick(P.bluff)}
+  else if(q.exp.includes('eerlijk')&&a.honest&&!rel.length&&q.exp.length===1){d=12;reply=pick(P.hon);honestN++}
+  else if(rel.length){d=Math.min(25,10*rel.length)+(a.honest&&q.exp.includes('eerlijk')?5:0);reply=pick(P.pos);if(a.honest)honestN++}
+  else if(a.honest&&q.exp.includes('eerlijk')){d=10;reply=pick(P.hon);honestN++}
+  else {d=-5;reply=pick(P.push)}
+  setMeter(d);
+  const weak=d<=0;
+  if(weak&&!pushed&&a.words>=6&&!a.bad.length){pushed=true;say(reply);return}  /* één keer doorvragen */
+  pushed=false;qi++;
+  if(qi<P.q.length){dots();say(reply,()=>setTimeout(()=>say(P.q[qi].t),250))}
+  else {dots();say(reply,()=>setTimeout(feedback,900))}
+}
+$('send').onclick=answer;
+$('ans').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();answer()}};
+$('demo').onclick=()=>{if(P&&P.q[qi]){$('ans').value=P.q[qi].vb;$('ans').focus()}};
+$('hint').onclick=()=>{if(!P||busy)return;hints++;setMeter(-5);sys(`Tip: ${P.naam} let op ${P.rel.map(k=>ARG[k].l.toLowerCase()).join(', ')}.`)};
+
+/* ---------- feedback ---------- */
+function feedback(){
+  const v=meter>=70?['is <span>overtuigd</span>','Dit verhaal kun je vertellen.']:meter>=45?['<span>twijfelt</span> nog','Bijna. Kijk wat je miste.']:['is <span>niet overtuigd</span>','Oefen nog een keer met de leerkaart hieronder.'];
+  const ok=[...used].filter(k=>P.rel.includes(k));
+  const extra=[...used].filter(k=>!P.rel.includes(k));
+  const miss=P.rel.filter(k=>!used.has(k));
+  const learn=(miss.length?miss:P.rel).filter(k=>k!=='eerlijk').slice(0,3);
+  const C=2*Math.PI*48;
+  $('sFb').innerHTML=`
+    <div class="verdict">
+      <div class="ring"><svg width="110" height="110"><circle cx="55" cy="55" r="48" fill="none" stroke="#21412F" stroke-width="10"/><circle cx="55" cy="55" r="48" fill="none" stroke="#FFD43B" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-meter/100)}"/></svg><b>${meter}</b></div>
+      <div class="big">${esc(P.naam)} ${v[0]}</div><p>${v[1]}</p>
+    </div>
+    <div class="paper">
+      <div class="cols">
+        <div class="col ok"><h3>Goed gedaan</h3>${ok.length||honestN?ok.map(k=>`<div class="it"><b>${ARG[k].l}</b><small>${k==='eerlijk'?`${honestN}× eerlijk gezegd wat je niet weet`:ARG[k].src}</small></div>`).join('')+extra.map(k=>`<div class="it"><b>${ARG[k].l}</b><small>goed argument, maar niet waar ${esc(P.naam)} op let</small></div>`).join(''):'<div class="none">Nog geen argument dat bij dit publiek past.</div>'}</div>
+        <div class="col miss"><h3>Gemist voor ${esc(P.naam)}</h3>${miss.length?miss.map(k=>`<div class="it"><b>${ARG[k].l}</b>${esc(ARG[k].say)}<small>bron: ${ARG[k].src}</small></div>`).join(''):'<div class="none">Niets. Alles wat telt kwam langs.</div>'}</div>
+        <div class="col bad"><h3>Claims zonder bron</h3>${claims.length?claims.map(c=>`<div class="it"><q>${esc(c.q)}</q><small>Zonder bron: ${c.b.map(esc).join(' · ')}. Noem een bron, of zeg dat je het uitzoekt.</small></div>`).join(''):'<div class="none">Geen. Netjes.</div>'}</div>
+      </div>
+      <div class="learn"><h3>Onthoud deze ${learn.length} voor ${esc(P.naam)}</h3><ol>${learn.map(k=>`<li>${esc(ARG[k].say)}<small>${ARG[k].src}</small></li>`).join('')}</ol></div>
+    </div>
+    <div class="again"><button class="btn" id="re">Nog een keer</button><button class="btn o" id="other">Ander publiek</button></div>`;
+  $('re').onclick=()=>start(Object.keys(PER).find(k=>PER[k]===P));
+  $('other').onclick=()=>show('sPick');
+  show('sFb');window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Matchbriefing – prototype 2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{--g:#1E6B47;--g-d:#123A28;--g-l:#E6F2EA;--y:#FFD43B;--y-d:#8A6A00;--y-l:#FFF6CC;--ink:#17261E;--mute:#7A8279;--line:#E7E3D4;--bg:#F8F6EE}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  button,input,select{font:inherit;color:inherit}
+  [hidden]{display:none !important}
+  .bar{display:flex;align-items:center;gap:12px;padding:16px 24px;flex-wrap:wrap}
+  .logo{width:24px;height:24px;border-radius:7px;background:var(--y);position:relative;flex:none}
+  .logo::after{content:"";position:absolute;left:6px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--g)}
+  .bar b{font-size:16px;color:var(--g-d)}
+  .bar .role{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
+  .bar select{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 10px;font-size:13px;color:var(--ink)}
+  .tag{font-size:11px;background:var(--y-l);color:var(--y-d);border-radius:99px;padding:3px 9px;font-weight:600}
+  main{flex:1;width:100%;max-width:1040px;margin:0 auto;padding:0 16px}
+
+  /* start */
+  .start{min-height:62vh;display:grid;place-content:center;text-align:center;gap:22px}
+  .start h1{margin:0;font-size:clamp(30px,5vw,48px);color:var(--g-d);letter-spacing:-.02em}
+  .start h1 span{background:linear-gradient(transparent 64%,var(--y) 64%)}
+  .search{display:flex;background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px;width:min(640px,92vw);margin:0 auto;box-shadow:0 8px 30px rgba(18,58,40,.07)}
+  .search input{border:0;outline:0;background:none;padding:10px 16px;font-size:15px;min-width:0}
+  .search #qn{flex:0 0 34%;border-right:1px solid var(--line)}
+  .search #qd{flex:1}
+  .search button{border:0;background:var(--y);color:var(--g-d);font-weight:700;border-radius:99px;padding:0 24px;cursor:pointer}
+  .try{font-size:13px;color:var(--mute);display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center}
+  .try button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;cursor:pointer;font-size:13px}
+  .try button:hover{border-color:var(--g)}
+
+  /* resultaat */
+  .rtop{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin:8px 0 6px}
+  .rtop h2{margin:0;font-size:28px;color:var(--g-d);letter-spacing:-.01em}
+  .rtop .s{font-size:13px;color:var(--mute)}
+  .acts{margin-left:auto;display:flex;gap:8px}
+  .btn{border:0;border-radius:99px;padding:9px 16px;font-weight:700;cursor:pointer;background:var(--g);color:#fff;font-size:14px}
+  .btn.y{background:var(--y);color:var(--g-d)}
+  .btn.o{background:none;border:1px solid var(--line);color:var(--ink);font-weight:600}
+  .btn.on{background:var(--g-d)}
+
+  .stage{position:relative;width:100%;aspect-ratio:16/8.4;margin:6px 0 4px}
+  .stage svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .ln{stroke:#D5DCCF;stroke-width:1.5;vector-effect:non-scaling-stroke}
+  .route{fill:none;stroke:var(--g);stroke-width:3;stroke-dasharray:8 7;vector-effect:non-scaling-stroke;animation:dash 1.2s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-30}}
+  .me{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(96px,14vw,140px);aspect-ratio:1;border-radius:50%;background:var(--y);display:grid;place-items:center;text-align:center;padding:10px;font-weight:800;color:var(--g-d);font-size:clamp(13px,1.6vw,16px);line-height:1.2;box-shadow:0 0 0 10px rgba(255,212,59,.25)}
+  .me small{display:block;font-weight:600;font-size:11px;color:var(--y-d)}
+  .node{position:absolute;transform:translate(-50%,-50%) scale(.6);opacity:0;border:2px solid var(--g);background:#fff;border-radius:14px;padding:8px 14px;cursor:pointer;text-align:center;max-width:190px;transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .3s,background .2s,color .2s}
+  .node.in{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .node.k{border-style:dashed}
+  .node small{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g)}
+  .node b{display:block;font-size:14px;line-height:1.25}
+  .node:hover,.node.sel{background:var(--g);color:#fff}
+  .node:hover small,.node.sel small{color:var(--y)}
+  .num{position:absolute;top:-11px;left:-11px;width:24px;height:24px;border-radius:50%;background:var(--g-d);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center}
+
+  .pop{position:relative;margin:4px auto 6px;width:min(440px,100%);background:var(--g-d);color:#fff;border-radius:14px;padding:14px 16px 12px;box-shadow:0 12px 30px rgba(0,0,0,.18);z-index:5}
+  .pop small{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--y)}
+  .pop h3{margin:2px 0 6px;font-size:17px}
+  .pop p{margin:0;font-size:15px;line-height:1.45}
+  .pop .src{font-size:11px;opacity:.65;margin-top:8px}
+  .pop .x{position:absolute;right:10px;top:8px;border:0;background:none;color:#fff;opacity:.6;font-size:18px;cursor:pointer}
+
+  .tourbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;font-size:13px;margin:4px 0 8px}
+  .tourbar span{background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+  .tourbar span b{color:var(--g)}
+  .tourbar i{color:var(--mute);font-style:normal}
+
+  .rows{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;margin:10px 0 6px}
+  .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .lab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-right:4px}
+  .chip{font-size:13px;background:var(--g-l);color:var(--g-d);border-radius:99px;padding:4px 11px;font-weight:600}
+  .chip.no{background:var(--y-l);color:var(--y-d)}
+  .tip{text-align:center;font-size:13.5px;color:var(--y-d);margin:6px 0 18px}
+
+  /* scan */
+  .scan{display:grid;place-items:center;min-height:62vh;text-align:center}
+  .scan .ring{width:90px;height:90px;border-radius:50%;border:6px solid var(--g-l);border-top-color:var(--g);animation:spin .8s linear infinite;margin:0 auto 18px}
+  .scan p{margin:0;font-size:15px;color:var(--g-d);font-weight:600;min-height:22px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* leave-behind */
+  .modal{position:fixed;inset:0;background:rgba(18,58,40,.45);display:grid;place-items:start center;overflow:auto;padding:30px 12px;z-index:20}
+  .mbox{width:min(794px,100%)}
+  .mtools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .mtools input{flex:1;min-width:180px;border:0;border-radius:99px;padding:9px 14px}
+  .paper{background:#fff;border-radius:6px;padding:40px 44px}
+  .lb-top{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:4px solid var(--y)}
+  .lb-top h2{margin:0;font-size:24px;color:var(--g-d)}
+  .lb-top p{margin:2px 0 0;font-size:13px;color:var(--mute)}
+  .lb h3{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--g);margin:24px 0 10px}
+  .lb-b{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .lb-b div{border-top:3px solid var(--g);padding-top:8px}
+  .lb-b small{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--y-d)}
+  .lb-b b{display:block;font-size:15px;margin:1px 0 3px}
+  .lb-b p{margin:0;font-size:13px;line-height:1.4}
+  .lb-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .lb-q{font-size:15px;font-style:italic;color:var(--g-d);border-left:4px solid var(--y);padding-left:12px;margin:0}
+  .lb-n{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .lb-n div{background:var(--g-l);border-radius:8px;padding:10px 12px;font-size:12px}
+  .lb-n b{display:block;font-size:22px;color:var(--g-d)}
+  .lb-f{margin-top:26px;border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;gap:16px;font-size:12.5px;flex-wrap:wrap}
+  .lb-f b{display:block;color:var(--g-d)}
+  .ph{background:var(--y-l);padding:0 4px;border-radius:3px}
+  .lb-s{font-size:9.5px;color:var(--mute);margin-top:12px}
+
+  footer{font-size:11px;color:var(--mute);text-align:center;padding:14px 16px 22px}
+  #printzone{display:none}
+
+  @media(max-width:700px){
+    .stage{aspect-ratio:3/4}
+    .node{max-width:120px;padding:6px 9px}.node b{font-size:12.5px}
+    .search{flex-wrap:wrap;border-radius:18px}.search #qn{flex:1 1 100%;border-right:0;border-bottom:1px solid var(--line)}.search button{padding:10px 20px}
+    .acts{margin-left:0}
+    .paper{padding:24px 18px}.lb-b,.lb-n{grid-template-columns:1fr}
+  }
+  @media print{
+    body > *:not(#printzone){display:none !important}
+    #printzone{display:block !important}
+    .paper{padding:0}
+    .lb-b,.lb-n{grid-template-columns:repeat(3,1fr) !important}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{size:A4;margin:16mm}
+  }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="logo"></div><b>Matchbriefing</b><span class="tag">Prototype 2</span>
+  <label class="role">Ik ben
+    <select id="role">
+      <option value="am">accountmanager</option>
+      <option value="cm">communitymanager</option>
+      <option value="ei">pandeigenaar</option>
+      <option value="nw">nieuwe collega</option>
+    </select>
+  </label>
+</header>
+
+<main>
+  <section id="start" class="start">
+    <h1>Wie komt er <span>kijken?</span></h1>
+    <form id="f" class="search" autocomplete="off">
+      <input id="qn" placeholder="Bedrijf">
+      <input id="qd" placeholder="Wat doen ze?">
+      <button>Match</button>
+    </form>
+    <div class="try" id="try">Probeer:</div>
+  </section>
+
+  <section id="scan" class="scan" hidden><div><div class="ring"></div><p id="scanTxt"></p></div></section>
+
+  <section id="res" hidden>
+    <div class="rtop">
+      <div><h2 id="rn"></h2><div class="s" id="rs"></div></div>
+      <div class="acts">
+        <button class="btn" id="bTour">Tour</button>
+        <button class="btn y" id="bLb">Leave-behind</button>
+        <button class="btn o" id="bNew">Nieuw</button>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" id="lines"></svg>
+      <div class="me" id="me"></div>
+      <div id="nodes"></div>
+    </div>
+    <div class="pop" id="pop" hidden></div>
+    <div class="tourbar" id="tourbar" hidden></div>
+    <div class="rows">
+      <div class="row"><span class="lab">Talent</span><span id="talent"></span></div>
+      <div class="row"><span class="lab">Omgevingsvisie</span><span id="beleid"></span></div>
+    </div>
+    <div class="tip" id="tip"></div>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="mbox">
+    <div class="mtools"><input id="teller" placeholder="Jouw naam en contact"><button class="btn y" id="bPrint">Print / PDF</button><button class="btn o" id="bClose" style="background:#fff">Sluiten</button></div>
+    <div id="lb"></div>
+  </div>
+</div>
+<div id="printzone"></div>
+<footer>Prototype · Campus Intelligence Challenge (HHS) · prospects fictief, AI gesimuleerd · parkbedrijven uit openbare bronnen, nog niet bevestigd</footer>
+
+<script>
+/* ---------- data (bronnen: DIP-bedrijvenpagina 25-09-2026, community, gemeente, MRDH, Ellen 17-09, Omgevingsvisie 2040) ---------- */
+const ZONE={dif:"Dutch Innovation Factory",b39:"Naast de DIF",dtc:"Dutch Tech Campus",park:"Op het park (locatie checken)"};
+const ZORD=["dif","b39","dtc","park"];
+const PARK=[
+  {id:"siemens",n:"Siemens Mobility",z:"dtc",wat:"Mobiliteitstechnologie",tags:["mobility","data","hardware"],rel:"klant",src:"gemeente Zoetermeer"},
+  {id:"yunex",n:"Yunex Traffic",z:"dtc",wat:"Verkeerstechnologie",tags:["mobility","data","iot"],rel:"partner",src:"DIP-bedrijvenpagina"},
+  {id:"atos",n:"Atos Medical",z:"dtc",wat:"Medische hulpmiddelen",tags:["health","hardware"],rel:"partner",src:"DIP-bedrijvenpagina"},
+  {id:"wsa",n:"WS Audiology",z:"dtc",wat:"Hoortoestellen",tags:["health","hardware","software"],rel:"partner",src:"gemeente Zoetermeer"},
+  {id:"reconext",n:"Reconext",z:"dtc",wat:"Reparatie van elektronica",tags:["hardware","logistics","iot"],rel:"leverancier",src:"gemeente Zoetermeer"},
+  {id:"tellick",n:"Tellick",z:"dif",wat:"VR, AI en distributed systems",tags:["vr","ai","software"],rel:"leverancier",src:"eigen site"},
+  {id:"interxept",n:"InterXept",z:"dif",wat:"IT-strategie en processen",tags:["software","overheid","finance"],rel:"leverancier",src:"eigen site"},
+  {id:"deeporange",n:"Deep Orange",z:"dif",wat:"Wagenparkbeheer",tags:["mobility","logistics","software"],rel:"partner",src:"eigen site"},
+  {id:"ars",n:"Audit & Risk Solutions",z:"dif",wat:"Risicomanagement",tags:["finance","security"],rel:"leverancier",src:"eigen site"},
+  {id:"kennisnet",n:"Kennisnet",z:"dif",wat:"Digitalisering onderwijs",tags:["onderwijs","overheid","data"],rel:"klant",src:"eigen site"},
+  {id:"infinity",n:"Infinity IT",z:"dif",wat:"IT-dienstverlening",tags:["cloud","software","security"],rel:"leverancier",src:"eigen site"},
+  {id:"whitevision",n:"Whitevision",z:"dif",wat:"IT-dienstverlening",tags:["cloud","software"],rel:"leverancier",src:"eigen site"},
+  {id:"infradax",n:"Infradax Overheid",z:"dif",wat:"IT voor gemeenten",tags:["overheid","software","cloud"],rel:"klant",src:"DIP-bedrijvenpagina"},
+  {id:"bluecoded",n:"Blue Coded",z:"b39",wat:"Microsoft en cloud",tags:["cloud","software","security"],rel:"leverancier",src:"DIP-bedrijvenpagina"},
+  {id:"tkh",n:"TKH Security",z:"park",wat:"Beveiligingstechniek",tags:["security","iot","installatie"],rel:"partner",src:"DIP-bedrijvenpagina"},
+  {id:"rittal",n:"Rittal",z:"park",wat:"IT-infrastructuur + trainingscenter",tags:["installatie","hardware","iot"],rel:"partner",src:"DIP-bedrijvenpagina"},
+  {id:"tno",n:"TNO",z:"park",wat:"Toegepast onderzoek",tags:["onderzoek","health","installatie"],rel:"kennis",src:"Ellen van der Knaap"},
+  {id:"parkrable",n:"PARKRable",z:"park",wat:"Parkeerdata",tags:["mobility","data","startup"],rel:"partner",src:"DIP-bedrijvenpagina"},
+  {id:"bigdata",n:"Big Data Innovatiehub",z:"dif",wat:"Lab voor data-analyse",tags:["data","ai"],rel:"kennis",src:"MRDH",lab:1},
+  {id:"cyber",n:"Cyber Security centrum",z:"dif",wat:"Labs: security, gedrag, IoT",tags:["security","iot","health"],rel:"kennis",src:"MRDH",lab:1},
+  {id:"gamelab",n:"GameLab",z:"dif",wat:"Lab voor games en VR",tags:["vr"],rel:"kennis",src:"MRDH",lab:1}
+];
+const REL={partner:"Partner",klant:"Klant",leverancier:"Leverancier",kennis:"Lab / kennis"};
+const TALENT=[
+  {n:"HHS ITD",t:["*"]},{n:"Data Science & AI",t:["data","ai","health","mobility","logistics"]},{n:"ID-challenge",t:["*"]},
+  {n:"Minor startup",t:["startup"]},{n:"mboRijnland IT",t:["iot","installatie","hardware","cloud"]},{n:"TU Delft · Leiden",t:["onderzoek","ai","health"]},
+  {n:"Elektrotechniek: nog niet",t:["installatie"],no:1}
+];
+const SECT=[{n:"ICT",t:["software","cloud","security","data","ai","vr"]},{n:"Health",t:["health"]},{n:"Logistiek & Handel",t:["logistics","mobility"]},{n:"Bouw & Installatie",t:["installatie","iot"]}];
+const KW={health:["zorg","health","medisch","patiënt","patient","care","gezond"],software:["software","app","platform","saas","develop"],data:["data","analyse","dashboard"],ai:["ai","machine learning","kunstmatige","llm"],security:["security","beveilig","cyber","privacy"],cloud:["cloud","microsoft","hosting","infra","beheer"],mobility:["mobiliteit","mobility","verkeer","parkeer","vervoer","laadpal"],logistics:["logistiek","transport","route","bezorg","magazijn","wagenpark"],iot:["iot","sensor","embedded"],installatie:["installatie","bouw","elektro","klimaat","energie","gebouw","monteur"],hardware:["hardware","elektronica","apparat"],vr:["vr","ar","virtual","game","3d"],onderwijs:["onderwijs","school","edtech"],overheid:["overheid","gemeente","publiek"],finance:["financ","risico","audit"],startup:["startup","start-up","starter","scale-up"]};
+const LBL={health:"zorg",software:"software",data:"data",ai:"AI",security:"security",cloud:"cloud",mobility:"mobiliteit",logistics:"logistiek",iot:"IoT",installatie:"installatie",hardware:"hardware",vr:"VR",onderwijs:"onderwijs",overheid:"overheid",finance:"risico",startup:"startup",onderzoek:"onderzoek"};
+
+/* fictieve prospects */
+const PROS={
+  "Polder Pulse":{d:"e-health scale-up, 25 mensen",tags:["health","software","data","security"],
+    m:[["wsa","Health-tech op schaal: sparring- of pilotpartner."],["atos","Zelfde zorgklanten, ander product."],["cyber","Gezondheidsdata beveiligen en testen met gebruikers."],["bigdata","Meetdata analyseren zonder eigen datateam."],["bluecoded","Cloud en werkplekken voor een groeiend team."]],
+    tip:"Beloof geen pilots namens de buren. Vraag eerst of ze willen kennismaken."},
+  "Routekompas":{d:"logistiek-startup, 9 mensen",tags:["logistics","mobility","software","data","startup"],
+    m:[["deeporange","Zelfde klant, ander probleem. Check: concurrent?"],["yunex","Verkeersdata voor een routeplanner."],["parkrable","Ook startup, ook mobiliteitsdata."],["bigdata","Route-optimalisatie testen."],["siemens","Grote mobiliteitsnaam: klant op termijn."]],
+    tip:"Krap budget? De Gele Doos is startupvriendelijk en goedkoper per m²."},
+  "Klimaatkast Sensing":{d:"IoT voor installateurs, 40 mensen",tags:["iot","installatie","hardware","security"],
+    m:[["rittal","Hardware én een trainingscenter: samen technici opleiden."],["tkh","Zelfde installateurs als klant."],["cyber","IoT-lab test hoe veilig sensoren zijn."],["tno","Onderzoek naar meten en energie."],["reconext","Repareert sensoren uit het veld."]],
+    tip:"Elektrotechniek zit nog niet op het park. Niet beloven."}
+};
+const ROLE={am:"Huur en ruimte bespreekt u met de verhuurder. Ik breng u graag in contact.",cm:"Wilt u kennismaken met een van deze bedrijven? Ik regel de introductie.",ei:"Ruimte, huur en parkeren bespreken we graag in een vervolggesprek.",nw:"Voor huur en introducties breng ik u in contact met de accountmanager."};
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const P=id=>PARK.find(p=>p.id===id);
+const hit=(tags,t)=>t.includes("*")||t.some(x=>tags.includes(x));
+let cur=null,tour=false;
+
+$('try').innerHTML+=Object.keys(PROS).map(n=>` <button type="button" data-n="${n}">${n}</button>`).join('');
+$('try').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('qn').value=b.dataset.n;$('qd').value=PROS[b.dataset.n].d;go()};
+$('f').onsubmit=e=>{e.preventDefault();go()};
+$('bNew').onclick=()=>{show('start');$('qn').value='';$('qd').value='';$('qn').focus()};
+$('bTour').onclick=()=>{tour=!tour;draw()};
+$('bLb').onclick=()=>{$('lb').innerHTML=lb();$('modal').hidden=false};
+$('bClose').onclick=()=>$('modal').hidden=true;
+$('modal').onclick=e=>{if(e.target.id==='modal')$('modal').hidden=true};
+$('teller').oninput=()=>$('lb').innerHTML=lb();
+$('bPrint').onclick=()=>{$('printzone').innerHTML=lb();window.print()};
+$('role').onchange=()=>{if(!$('modal').hidden)$('lb').innerHTML=lb()};
+function show(id){['start','scan','res'].forEach(s=>$(s).hidden=s!==id)}
+
+function build(name,desc){
+  if(PROS[name]){const p=PROS[name];return {name,desc:p.d,tags:p.tags,tip:p.tip,fict:1,m:p.m.map(([id,why])=>({...P(id),why}))}}
+  const low=desc.toLowerCase(),has=w=>w.length<=3?new RegExp('(^|[^a-zà-ÿ])'+w+'([^a-zà-ÿ]|$)').test(low):low.includes(w);
+  const tags=Object.keys(KW).filter(t=>KW[t].some(has));if(!tags.length)tags.push("software");
+  const m=PARK.map(p=>({p,s:p.tags.filter(t=>tags.includes(t)).length+(p.lab?.2:0)})).filter(x=>x.s>=1).sort((a,b)=>b.s-a.s).slice(0,5)
+    .map(({p})=>({...p,why:`Raakvlak op ${p.tags.filter(t=>tags.includes(t)).map(t=>LBL[t]).join(' en ')}.`}));
+  return {name:name||"Uw bedrijf",desc,tags,m,tip:"Automatische match op trefwoorden. Check of de buren open staan voor een kennismaking."};
+}
+
+function go(){
+  const name=$('qn').value.trim(),desc=$('qd').value.trim();
+  if(!name&&!desc){$('qn').focus();return}
+  cur=build(name,desc);tour=false;
+  show('scan');
+  const steps=["Website lezen…","KvK ophalen…",`${PARK.length} parkbedrijven en labs matchen…`,"Route plannen…"];
+  let i=0;const t=()=>{if(i<steps.length){$('scanTxt').textContent=steps[i++];setTimeout(t,420)}else{show('res');render()}};t();
+}
+
+function render(){
+  const c=cur;
+  /* sorteer op zone zodat de tour rond de cirkel loopt */
+  c.m.sort((a,b)=>ZORD.indexOf(a.z)-ZORD.indexOf(b.z));
+  $('rn').textContent=c.name;
+  $('rs').innerHTML=esc(c.desc||'')+(c.fict?' · <span class="tag">fictief</span>':'');
+  $('me').innerHTML=esc(c.name);
+  const n=c.m.length,mob=innerWidth<700,rx=mob?34:36,ry=mob?36:38;
+  c.pos=c.m.map((_,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;return {x:50+rx*Math.cos(a),y:50+ry*Math.sin(a)}});
+  $('nodes').innerHTML=c.m.map((x,i)=>`<button class="node${x.lab?' k':''}" data-i="${i}" style="left:${c.pos[i].x}%;top:${c.pos[i].y}%"><small>${REL[x.rel]}</small><b>${esc(x.n)}</b></button>`).join('');
+  $('nodes').onclick=e=>{const b=e.target.closest('.node');if(b)pop(+b.dataset.i)};
+  document.querySelectorAll('.node').forEach((el,i)=>setTimeout(()=>el.classList.add('in'),80+i*110));
+  $('pop').hidden=true;
+  $('talent').innerHTML=TALENT.filter(t=>hit(c.tags,t.t)).map(t=>`<span class="chip${t.no?' no':''}">${t.n}</span>`).join(' ');
+  const s=SECT.filter(x=>hit(c.tags,x.t));
+  $('beleid').innerHTML=(s.length?s:[SECT[0]]).map(x=>`<span class="chip">${x.n}</span>`).join(' ');
+  $('tip').textContent=c.tip;
+  draw();
+}
+
+function draw(){
+  const c=cur;
+  $('bTour').classList.toggle('on',tour);$('bTour').textContent=tour?'Tour uit':'Tour';
+  let svg=c.pos.map(p=>`<line class="ln" x1="50" y1="50" x2="${p.x}" y2="${p.y}"/>`).join('');
+  if(tour) svg+=`<path class="route" d="M50 50 ${c.pos.map(p=>`L${p.x} ${p.y}`).join(' ')}"/>`;
+  $('lines').innerHTML=svg;
+  document.querySelectorAll('.node').forEach((el,i)=>{el.querySelector('.num')?.remove();if(tour)el.insertAdjacentHTML('afterbegin',`<span class="num">${i+2}</span>`)});
+  $('me').innerHTML=tour?`<div><small>1 · start</small>Ontvangst in de DIF</div>`:esc(c.name);
+  const min=15+c.m.reduce((a,x)=>a+(x.z==="dif"||x.z==="b39"?8:12),0);
+  $('tourbar').hidden=!tour;
+  $('tourbar').innerHTML=`<span><b>1</b> DIF + HHS</span>${c.m.map((x,i)=>`<i>→</i><span><b>${i+2}</b> ${esc(x.n)}</span>`).join('')}<i>· ± ${min} min · vraag buren vooraf</i>`;
+}
+
+function pop(i){
+  const x=cur.m[i];
+  document.querySelectorAll('.node').forEach((el,j)=>el.classList.toggle('sel',j===i));
+  $('pop').hidden=false;
+  $('pop').innerHTML=`<button class="x" aria-label="Sluiten">×</button><small>${REL[x.rel]} · ${ZONE[x.z]}</small><h3>${esc(x.n)}</h3><p>${esc(x.why)}</p><div class="src">${esc(x.wat)} · bron: ${x.src}</div>`;
+  $('pop').querySelector('.x').onclick=()=>{$('pop').hidden=true;document.querySelectorAll('.node').forEach(el=>el.classList.remove('sel'))};
+}
+
+function lb(){
+  const c=cur,t=$('teller').value.trim();
+  const tl=TALENT.filter(x=>hit(c.tags,x.t)&&!x.no),s=SECT.filter(x=>hit(c.tags,x.t));
+  return `<div class="paper lb">
+    <div class="lb-top"><div class="logo"></div><div><h2>Welkom op het Dutch Innovation Park</h2><p>Voor ${esc(c.name)} · ${new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</p></div></div>
+    <h3>Uw buren</h3>
+    <div class="lb-b">${c.m.slice(0,3).map(x=>`<div><small>${REL[x.rel]}</small><b>${esc(x.n)}</b><p>${esc(x.why)}</p></div>`).join('')}</div>
+    <h3>Talent om de hoek</h3>
+    <div class="lb-chips">${tl.map(x=>`<span class="chip">${x.n}</span>`).join('')}</div>
+    <h3>Waarom Zoetermeer dit wil</h3>
+    <p class="lb-q">"De campus is de zichtbare aanjager van Zoetermeer als stad van de toegepaste innovaties."</p>
+    <div class="lb-chips" style="margin-top:10px">${(s.length?s:[SECT[0]]).map(x=>`<span class="chip">${x.n}</span>`).join('')}<span class="chip">Triple Helix 2040</span></div>
+    <h3>Het park</h3>
+    <div class="lb-n"><div><b>75+</b>bedrijven en instellingen</div><div><b>± 800</b>IT-studenten</div><div><b>700</b>gratis P+R-plekken bij station Lansingerland-Zoetermeer · A12</div></div>
+    <div class="lb-f"><div><b>Vervolg</b>${esc(ROLE[$('role').value])}</div><div style="text-align:right"><b>Contact</b>${t?esc(t):'<span class="ph">naam invullen</span>'}</div></div>
+    <div class="lb-s">Bronnen: dutchinnovationpark.nl · gemeente Zoetermeer · Omgevingsvisie Zoetermeer 2040 (hoofdlijn 4 en 5). Prototype, cijfers nog niet bevestigd.${c.fict?' Prospect fictief.':''}</div>
+  </div>`;
+}
+</script>
+</body>
+</html>

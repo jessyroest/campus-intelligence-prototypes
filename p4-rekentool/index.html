@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Wat je hier níét betaalt – prototype 4</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{--g:#1E6B47;--g-d:#123A28;--g-l:#E6F2EA;--y:#FFD43B;--y-d:#8A6A00;--ink:#17261E;--mute:#6E776F;--line:#E7E3D4;--paper:#FFFDF6}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--g-d);color:#fff;min-height:100vh}
+  button,input{font:inherit;color:inherit}
+  .bar{display:flex;align-items:center;gap:10px;padding:16px 24px}
+  .logo{width:24px;height:24px;border-radius:7px;background:var(--y);position:relative}
+  .logo::after{content:"";position:absolute;left:6px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--g-d)}
+  .bar b{font-size:16px}
+  .tag{font-size:11px;border:1px solid rgba(255,212,59,.5);color:var(--y);border-radius:99px;padding:2px 9px}
+  main{max-width:1060px;margin:0 auto;padding:10px 16px 30px}
+  h1{font-size:clamp(28px,4.6vw,46px);margin:8px 0 6px;letter-spacing:-.02em;line-height:1.1}
+  h1 em{font-style:normal;color:var(--g-d);background:var(--y);padding:0 10px;border-radius:8px}
+  .lead{color:#A9C2B3;margin:0 0 26px;font-size:15.5px}
+  .grid{display:grid;grid-template-columns:1fr 420px;gap:34px;align-items:start}
+
+  /* invoer */
+  .f{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+  .f:first-child{padding-top:0}
+  .fl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+  .fl label{font-size:15px;font-weight:600}
+  .fl small{display:block;font-size:12px;color:#A9C2B3;font-weight:400}
+  .fl output{font-size:22px;font-weight:800;color:var(--y);min-width:60px;text-align:right}
+  input[type=range]{width:100%;accent-color:var(--y);height:22px}
+  .tier{font-size:12.5px;color:#A9C2B3;margin-top:6px}
+  .tier b{color:#fff}
+
+  /* bon */
+  .bon{background:var(--paper);color:var(--ink);padding:26px 26px 22px;position:relative;font-variant-numeric:tabular-nums;box-shadow:0 20px 50px rgba(0,0,0,.35);position:sticky;top:16px}
+  .bon::before,.bon::after{content:"";position:absolute;left:0;right:0;height:12px;background:radial-gradient(circle at 6px -2px,transparent 7px,var(--paper) 7.5px) 0 0/12px 12px repeat-x}
+  .bon::before{top:-12px;transform:scaleY(-1)}
+  .bon::after{bottom:-12px}
+  .bh{text-align:center;border-bottom:2px dashed var(--line);padding-bottom:12px;margin-bottom:10px}
+  .bh b{font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+  .bh div{font-size:12px;color:var(--mute)}
+  .ln{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:7px 0;font-size:14px}
+  .ln small{display:block;font-size:11.5px;color:var(--mute)}
+  .ln .was{color:var(--mute);text-decoration:line-through;text-decoration-color:#C0392B;text-decoration-thickness:2px;font-size:13px}
+  .ln .now{font-weight:800;color:var(--g);min-width:62px;text-align:right}
+  .ln.minus .now{color:#B5452C}
+  .ln.zero{opacity:.45}
+  .sep{border-top:2px dashed var(--line);margin:8px 0}
+  .tot{text-align:center;padding:10px 0 4px}
+  .tot small{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .tot .big{font-size:44px;font-weight:900;color:var(--g-d);letter-spacing:-.02em;line-height:1.05;transition:color .2s}
+  .tot .big.neg{color:#B5452C}
+  .tot .sub{font-size:13px;color:var(--mute)}
+  .m2{margin-top:12px;background:var(--y);border-radius:10px;padding:10px 12px;text-align:center;font-size:14px;font-weight:600}
+  .m2 b{font-size:18px}
+  .pitch{margin-top:12px;font-size:13.5px;line-height:1.5;background:var(--g-l);border-radius:10px;padding:10px 12px}
+  .copy{margin-top:10px;width:100%;border:0;border-radius:99px;padding:10px;background:var(--g-d);color:#fff;font-weight:700;cursor:pointer}
+  .src{font-size:10.5px;color:var(--mute);margin-top:12px;line-height:1.45}
+  .src a{color:var(--mute)}
+  .warn{margin-top:26px;font-size:13px;color:#A9C2B3;line-height:1.5;border-left:3px solid var(--y);padding-left:12px}
+  .warn b{color:#fff}
+  footer{font-size:11px;color:#7F9A8A;text-align:center;padding:10px 16px 22px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}.bon{position:static}}
+</style>
+</head>
+<body>
+<header class="bar"><div class="logo"></div><b>Rekentool</b><span class="tag">Prototype 4</span></header>
+<main>
+  <h1>Wat je hier <em>níét</em> betaalt</h1>
+  <p class="lead">Vul in hoe jullie werken. De bon laat zien wat je op het park terugkrijgt.</p>
+
+  <div class="grid">
+    <div>
+      <div class="f"><div class="fl"><label for="emp">Medewerkers</label><output id="oEmp"></output></div><input type="range" id="emp" min="1" max="250" value="25"><div class="tier" id="tier"></div></div>
+      <div class="f"><div class="fl"><label for="lab">Overleg met 10–20 mensen<small>Innovatielab, dagdelen per maand</small></label><output id="oLab"></output></div><input type="range" id="lab" min="0" max="20" value="4"></div>
+      <div class="f"><div class="fl"><label for="pen">Klein overleg, tot 6 mensen<small>Pentesthub, dagdelen per maand</small></label><output id="oPen"></output></div><input type="range" id="pen" min="0" max="30" value="6"></div>
+      <div class="f"><div class="fl"><label for="aud">Events tot 120 mensen<small>Auditorium, dagdelen per jaar</small></label><output id="oAud"></output></div><input type="range" id="aud" min="0" max="12" value="2"></div>
+      <div class="f"><div class="fl"><label for="tr">Medewerkers die met de trein komen<small>station Lansingerland-Zoetermeer ligt bij het park</small></label><output id="oTr"></output></div><input type="range" id="tr" min="0" max="100" step="5" value="20"></div>
+      <div class="warn"><b>Eerlijk vertellen:</b> zalen en labs zijn gratis voor leden van de Dutch Innovation Community. Die bijdrage staat op de bon als min-post. Parkeren bij de DIF kost geld; wat je bespaart, zijn plekken die je niet hoeft te huren omdat mensen met de trein komen. Tarieven gelden voor de DIF; andere panden kunnen anders zijn. Check bij de verhuurder.</div>
+    </div>
+
+    <div class="bon" id="bon"></div>
+  </div>
+</main>
+<footer>Prototype · Campus Intelligence Challenge (HHS) · bedragen ex btw, openbare tarieven opgehaald 06-10-2026, nog niet bevestigd door de opdrachtgever of verhuurder</footer>
+
+<script>
+/* Tarieven (bron: community.dutchinnovationpark.nl, funda in business, opgehaald 06-10-2026) */
+const T={lab:100,pen:60,aud:300,park:650,huurM2:140,serviceM2:40};
+const TIERS=[[4,400],[9,600],[19,950],[49,1800],[200,2500],[1e9,5000]];
+const $=id=>document.getElementById(id);
+const eur=n=>'€ '+Math.round(n).toLocaleString('nl-NL');
+const fee=e=>TIERS.find(([max])=>e<=max)[1];
+
+function calc(){
+  const emp=+$('emp').value,lab=+$('lab').value,pen=+$('pen').value,aud=+$('aud').value,tr=+$('tr').value;
+  $('oEmp').textContent=emp;$('oLab').textContent=lab+'×';$('oPen').textContent=pen+'×';$('oAud').textContent=aud+'×';$('oTr').textContent=tr+'%';
+  const f=fee(emp);
+  $('tier').innerHTML=`Community-bijdrage bij ${emp} medewerkers: <b>${eur(f)} per jaar</b>`;
+  const vLab=lab*12*T.lab,vPen=pen*12*T.pen,vAud=aud*T.aud;
+  const spots=Math.floor(emp*tr/100),vPark=spots*T.park;
+  const total=vLab+vPen+vAud+vPark-f;
+  const m2=total/(T.huurM2+T.serviceM2);
+  const perMonth=total/emp/12;
+  const L=(label,sub,was,now,cls='')=>`<div class="ln ${cls}"><div>${label}<small>${sub}</small></div><span class="was">${was}</span><span class="now">${now}</span></div>`;
+  $('bon').innerHTML=`
+    <div class="bh"><b>Dutch Innovation Park</b><div>bon voor ${emp} medewerkers · per jaar</div></div>
+    ${L('Innovatielab',`${lab}× per maand × ${eur(T.lab)}`,eur(vLab),'€ 0',lab?'':'zero')}
+    ${L('Pentesthub',`${pen}× per maand × ${eur(T.pen)}`,eur(vPen),'€ 0',pen?'':'zero')}
+    ${L('Auditorium',`${aud}× per jaar × ${eur(T.aud)}`,eur(vAud),'€ 0',aud?'':'zero')}
+    ${L('Labs en events','gratis voor leden, waarde niet berekend','','€ 0')}
+    ${L('Parkeerplekken niet nodig',`${spots} plekken × ${eur(T.park)} (trein)`,eur(vPark),'€ 0',spots?'':'zero')}
+    <div class="sep"></div>
+    ${L('Community-bijdrage','tarief voor jouw omvang','','+ '+eur(f),'minus')}
+    <div class="sep"></div>
+    <div class="tot"><small>Hier níét betaald</small><div class="big${total<0?' neg':''}">${eur(total)}</div><div class="sub">per jaar · ${eur(perMonth)} per medewerker per maand</div></div>
+    ${total>0?`<div class="m2">Dat is <b>${Math.round(m2)} m²</b> huur in de DIF</div>`:`<div class="m2">Bij dit gebruik verdien je de bijdrage niet terug. Eerlijk zeggen.</div>`}
+    <div class="pitch" id="pitch">${pitch(emp,total,m2,lab,pen,aud,spots)}</div>
+    <button class="copy" id="copy">Kopieer voor in je mail</button>
+    <div class="src">Bronnen: zaaltarieven en community-bijdrage <a href="https://community.dutchinnovationpark.nl/nl/reserveren-vergaderruimte/" target="_blank" rel="noopener">community.dutchinnovationpark.nl</a> · parkeerplek vanaf €650/jaar, huur €140 + service €40 per m²/jaar: verhuuradvertentie Bleiswijkseweg 37 op <a href="https://www.fundainbusiness.nl/kantoor/zoetermeer/object-48157797-bleiswijkseweg-37/" target="_blank" rel="noopener">fundainbusiness.nl</a>.</div>`;
+  $('copy').onclick=()=>{const t=$('pitch').innerText;try{navigator.clipboard.writeText(t).then(()=>{$('copy').textContent='Gekopieerd'},()=>{});}catch(e){}setTimeout(()=>{$('copy').textContent='Kopieer voor in je mail'},1500)};
+}
+function pitch(emp,total,m2,lab,pen,aud,spots){
+  if(total<=0) return `Met ${emp} medewerkers en dit gebruik wegen de gratis zalen niet op tegen de community-bijdrage. Het voordeel zit dan in de buren en het onderwijs, niet in de kosten.`;
+  const parts=[];
+  if(lab+pen) parts.push(`${lab+pen} overleggen per maand in de zalen van de DIF`);
+  if(aud) parts.push(`${aud} events in het auditorium`);
+  if(spots) parts.push(`${spots} parkeerplekken minder omdat het station naast de deur ligt`);
+  return `Met ${emp} medewerkers betaal je hier ongeveer ${eur(total)} per jaar níét: ${parts.join(', ')}, min de community-bijdrage. Dat is zo'n ${Math.round(m2)} m² huur die je eigenlijk terugkrijgt.`;
+}
+['emp','lab','pen','aud','tr'].forEach(id=>$(id).addEventListener('input',calc));
+calc();
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Gespreksbriefing – prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{--blue:#0B5FA5;--blue-d:#083E6E;--blue-l:#E3F0FA;--green:#2E9E4F;--green-l:#D9F2DE;--yellow:#FFD23F;--yellow-l:#FFF1B3;--ink:#14202B;--mute:#6B7785;--line:#E3E8EC}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink);background:#EEF2F5}
+  .bar{background:var(--blue);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:12px}
+  .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#fff 50%,var(--green) 50%);position:relative}
+  .logo::after{content:"";position:absolute;right:-3px;bottom:-3px;width:11px;height:11px;border-radius:50%;background:var(--yellow);border:2px solid var(--blue)}
+  .bar h1{margin:0;font-size:18px}
+  .bar .tag{margin-left:auto;font-size:12px;background:var(--yellow);color:var(--ink);padding:3px 10px;border-radius:99px;font-weight:700}
+  .wrap{max-width:1100px;margin:20px auto;padding:0 16px;display:grid;grid-template-columns:300px 1fr;gap:18px}
+  .card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);padding:16px}
+  .step{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:4px 0 8px}
+  .co{display:block;width:100%;text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font:inherit}
+  .co b{display:block;font-size:14px}.co span{font-size:12px;color:var(--mute)}
+  .co.on{border-color:var(--blue);background:var(--blue-l)}
+  .types{display:flex;flex-wrap:wrap;gap:6px}
+  .type{border:2px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+  .type.on{border-color:var(--green);background:var(--green-l);font-weight:600}
+  .go{margin-top:14px;width:100%;padding:11px;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+  .empty{display:grid;place-items:center;min-height:420px;color:var(--mute);text-align:center}
+  .head{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+  .head h2{margin:0;font-size:22px;color:var(--blue-d)}
+  .head p{margin:2px 0 0;color:var(--mute);font-size:13px}
+  .pill{margin-left:auto;background:var(--green-l);color:var(--green);font-weight:700;font-size:12px;padding:4px 10px;border-radius:99px;white-space:nowrap}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .sec{border:2px solid var(--blue-l);border-radius:12px;padding:12px 14px}
+  .sec h3{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+  .sec ol,.sec ul{margin:0;padding-left:18px;font-size:14px;line-height:1.45}
+  .sec li{margin-bottom:5px}
+  .full{grid-column:1 / -1}
+  .offer{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .o{background:var(--blue-l);border-radius:10px;padding:10px}
+  .o .n{font-size:24px;font-weight:800;color:var(--blue-d);line-height:1}
+  .o .t{font-size:12.5px;margin-top:3px}
+  .o .s{font-size:10px;color:var(--mute);margin-top:4px}
+  .warn{background:var(--yellow-l);border-left:5px solid var(--yellow);border-radius:8px;padding:10px 12px;font-size:13.5px}
+  .warn b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a5d00;margin-bottom:2px}
+  textarea{width:100%;min-height:70px;border:2px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:14px;resize:vertical}
+  .note{font-size:11px;color:var(--mute);margin-top:4px}
+  .ph{background:var(--yellow);padding:0 4px;border-radius:3px;font-weight:600}
+  @media(max-width:800px){.wrap{grid-template-columns:1fr}.grid,.offer{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="bar"><div class="logo"></div><h1>Gespreksbriefing · Dutch Innovation Park</h1><span class="tag">Prototype – fictieve bedrijven</span></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="step">1 · Met wie praat je?</div>
+    <div id="cos"></div>
+    <div class="step" style="margin-top:14px">2 · Waar gaat het gesprek over?</div>
+    <div class="types" id="types"></div>
+    <button class="go" onclick="render()">Maak briefing</button>
+  </div>
+  <div class="card" id="out"><div class="empty"><div><div style="font-size:34px">🗂️</div>Kies een bedrijf en een gesprek.<br>Je krijgt een briefing die iedereen kan gebruiken, niet alleen Ellen.</div></div></div>
+</div>
+
+<script>
+const PARK = {
+  talent:{n:"± 800",t:"hbo- en mbo-IT-studenten op het park",s:"gemeente Zoetermeer"},
+  werk:{n:"± 2.200",t:"mensen werken op het park",s:"dutchinnovationpark.nl, mei 2026"},
+  bedrijven:{n:"75+",t:"bedrijven en instellingen",s:"dutchinnovationpark.nl"},
+  invest:{n:"€ 60 mln+",t:"privaat geïnvesteerd in gebouwen",s:"Zoetermeers Dagblad, 2022"},
+  groei:{n:"+ 8%",t:"groei arbeidsplaatsen (Zoetermeer ± 2%)",s:"Zoetermeers Dagblad, 2022"}
+};
+const COS = {
+  a:{naam:"Byte & Co",sub:"IT-startup · 6 medewerkers · zit 1 jaar in de DIF",profiel:"Jong softwarebedrijf, groeit snel, zoekt developers. Werkt nog niet samen met onderwijs of buren.",kansen:["Challenge of stage via de HHS","Buren in de IT die opdrachten uitbesteden","Huurdersoverleg als netwerk"],offer:["talent","bedrijven","groei"],let:"Weet waarschijnlijk niet wat het park naast het gebouw biedt."},
+  b:{naam:"Voorbeeld Tech BV",sub:"Gevestigde huurder · 120 medewerkers · zit 8 jaar op het park",profiel:"Groot bedrijf, eigen gebouw, weinig contact met het park. Huurcontract loopt over twee jaar af.",kansen:["Eigen challenge of afstudeerder","Rol als ambassadeur richting nieuwe huurders","Kennisdeling met buren in dezelfde sector"],offer:["werk","talent","invest"],let:"Eerdere studentprojecten zijn blijven liggen. Begin met luisteren, niet met verkopen."},
+  c:{naam:"Nieuwkomer X",sub:"Overweegt vestiging · tech-scale-up · 40 medewerkers",profiel:"Zoekt een nieuwe locatie in de regio. Vergelijkt met andere campussen.",kansen:["Kennismaking met 2 buren in de sector","Rondleiding door huurders zelf","Koppeling met HHS voor personeel"],offer:["talent","werk","groei"],let:"Ellen is niet de verhuurder. Huur en m² bespreekt hij met de pandeigenaar."}
+};
+const TYPES = {
+  vestiging:{l:"Vestiging",msg:["Hier vind je talent: het park zit naast het onderwijs.","Je komt niet in een gebouw, je komt in een netwerk van 75+ bedrijven.","Het park groeit sneller dan de rest van Zoetermeer."],q:["Wat moet een nieuwe locatie jullie opleveren, naast vierkante meters?","Waar lopen jullie nu tegenaan bij het vinden van personeel?","Met wie zou je hier het liefst kennismaken?"]},
+  talent:{l:"Talent & stages",msg:["Studenten lopen hier letterlijk rond: ± 800 IT-studenten.","Een challenge levert een prototype én een kennismaking met toekomstig personeel op.","Je hoeft het niet zelf te regelen: wij koppelen je."],q:["Welke functies zijn het moeilijkst te vullen?","Hebben jullie eerder met studenten gewerkt? Wat leverde dat op?","Wat zou een stage of challenge voor jullie de moeite waard maken?"]},
+  blijven:{l:"Blijven of vertrekken",msg:["Wat je hier hebt, is meer dan je huurcontract.","Je buren en het onderwijs zijn er voor jou, we laten je zien hoe.","We willen weten wat je mist, en daar iets mee doen."],q:["Wat levert het park jullie nu op, en wat mis je?","Als je vertrekt, wat zou je dan kwijtraken?","Wat zou je ervan weerhouden om te gaan?"]},
+  samen:{l:"Samenwerking",msg:["De beste kansen zitten vaak bij de buren.","Het park verbindt, jij kiest met wie.","Samen sta je sterker richting subsidies en projecten."],q:["Wat zoeken jullie op dit moment dat een ander bedrijf zou kunnen bieden?","Wat kunnen jullie anderen bieden?","Wie kennen jullie al op het park?"]}
+};
+let co=null, ty=null;
+const $=id=>document.getElementById(id);
+$('cos').innerHTML=Object.entries(COS).map(([k,c])=>`<button class="co" data-k="${k}"><b>${c.naam}</b><span>${c.sub}</span></button>`).join('');
+$('types').innerHTML=Object.entries(TYPES).map(([k,t])=>`<button class="type" data-k="${k}">${t.l}</button>`).join('');
+document.querySelectorAll('.co').forEach(b=>b.onclick=()=>{co=b.dataset.k;document.querySelectorAll('.co').forEach(x=>x.classList.toggle('on',x===b))});
+document.querySelectorAll('.type').forEach(b=>b.onclick=()=>{ty=b.dataset.k;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('on',x===b))});
+function render(){
+  if(!co||!ty){$('out').innerHTML='<div class="empty">Kies eerst een bedrijf én een gesprek.</div>';return}
+  const c=COS[co],t=TYPES[ty];
+  $('out').innerHTML=`
+  <div class="head"><div><h2>${c.naam}</h2><p>${c.sub}</p></div><span class="pill">${t.l}</span></div>
+  <div class="grid">
+    <div class="sec"><h3>Wie is dit?</h3><div style="font-size:14px;line-height:1.45">${c.profiel}</div></div>
+    <div class="sec"><h3>Kansen voor dit bedrijf</h3><ul>${c.kansen.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="sec full"><h3>Wat het park dit bedrijf biedt</h3><div class="offer">${c.offer.map(k=>{const o=PARK[k];return `<div class="o"><div class="n">${o.n}</div><div class="t">${o.t}</div><div class="s">Bron: ${o.s}</div></div>`}).join('')}</div></div>
+    <div class="sec"><h3>3 kernboodschappen</h3><ol>${t.msg.map(x=>`<li>${x}</li>`).join('')}</ol></div>
+    <div class="sec"><h3>3 vragen om te stellen</h3><ol>${t.q.map(x=>`<li>${x}</li>`).join('')}</ol></div>
+    <div class="warn full"><b>Let op</b>${c.let}</div>
+    <div class="sec full"><h3>Na het gesprek</h3><textarea placeholder="Wat heb je gehoord? Wat is afgesproken?"></textarea><div class="note">In een volgende versie wordt dit bewaard bij het bedrijf, zodat een collega het gesprek kan overnemen. Nu nog niet opgeslagen.</div></div>
+  </div>`;
+}
+</script>
+</body>
+</html>
